@@ -1,0 +1,15 @@
+# depslib dependency file v1.0
+1247445283 source:c:\users\dougm\desktop\resistor\main.cpp
+	<conio.h>
+	<windows.h>
+	<cstdio>
+	<iostream>
+	<math.h>
+
+1247492628 source:c:\users\dougm\projetos\c++\resistor\main.cpp
+	<conio.h>
+	<windows.h>
+	<cstdio>
+	<iostream>
+	<math.h>
+
