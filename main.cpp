@@ -1,5 +1,9 @@
+#ifdef _WIN32
 #include <conio.h>
-#include <windows.h>
+#else
+#include <curses.h>
+#endif
+
 #include <cstdio>
 #include <iostream>
 #include <math.h>
