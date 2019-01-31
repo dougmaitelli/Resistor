@@ -96,9 +96,6 @@ void ShowMenu(int extra = 2) {
 
 char GetUoM(int uni) {
     switch(uni) {
-        case 0:
-            return NULL;
-            break;
         case 1:
             return 'K';
             break;
@@ -106,6 +103,7 @@ char GetUoM(int uni) {
             return 'M';
             break;
         default:
+            return 0;
             break;
     }
 }
@@ -123,6 +121,8 @@ int ConvertColor(int color) {
         case 8: return 7; break;
         case 9: return 15; break;
     }
+
+    return 0;
 }
 
 int main() {
