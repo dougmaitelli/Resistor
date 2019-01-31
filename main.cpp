@@ -1,99 +1,115 @@
+#ifdef _WIN32
 #include <conio.h>
-#include <windows.h>
+#else
+#include <curses.h>
+#endif
+
 #include <cstdio>
 #include <iostream>
 #include <math.h>
 
 using namespace std;
 
-enum Cores {
-    PRETO,
-    AZUL_ESCURO,
-    VERDE_ESCURO,
-    TURQUESA_ESCURO,
-    VERMELHO_ESCURO,
-    VIOLETA_ESCURO,
-    MARROM,
-    CINZA,
-    CINZA_ESCURO,
-    AZUL,
-    VERDE,
-    TURQUESA,
-    VERMELHO,
-    VIOLETA,
-    AMARELO,
-    BRANCO
+#ifdef _WIN32
+static int __BACKGROUND = BLACK;
+static int __FOREGROUND = WHITE;
+
+void SetForegroundColor(int color) {
+      __FOREGROUND = color;
+      SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color + (__BACKGROUND << 4));
+}
+
+void SetBackgroundColor(int color) {
+     __BACKGROUND = color;
+     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), __FOREGROUND + (color << 4));
+}
+#endif
+
+#ifdef _WIN32
+enum Color {
+    NONE = 0,
+    BLACK,
+    RED = 12,
+    GREEN = 10,
+    YELLOW = 14,
+    BLUE = 9,
+    MAGENTA = 13,
+    CYAN = 11,
+    WHITE = 15
 };
+#else
+enum Color {
+  	NONE = 0,
+  	BLACK,
+  	RED,
+  	GREEN,
+  	YELLOW,
+  	BLUE,
+  	MAGENTA,
+  	CYAN,
+  	WHITE
+};
+#endif
 
-static int __BACKGROUND = PRETO;
-static int __FOREGROUND = BRANCO;
+void Write(Color foreground, Color background, string text) {
+#ifdef _WIN32
+    SetForegroundColor(foreground);
+    SetBackgroundColor(background);
+#else
+    init_pair(1, foreground, background);
+    attron(COLOR_PAIR(1));
+#endif
 
-void CorTexto(int Cor)
-{
-      __FOREGROUND = Cor;
-      SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), Cor + (__BACKGROUND << 4));
+    cout << text << "\n";
+
+#ifdef _WIN32
+    SetForegroundColor(WHITE);
+    SetBackgroundColor(BLACK);
+#else
+    attroff(COLOR_PAIR(1));
+#endif
 }
 
-void FundoTexto(int Cor)
-{
-     __BACKGROUND = Cor;
-     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), __FOREGROUND + (Cor << 4));
-}
-
-void Escreve(Cores cor, Cores fundo, char* texto)
-{
-    CorTexto(cor);
-    FundoTexto(fundo);
-    printf("%s\n", texto);
-    CorTexto(BRANCO);
-    FundoTexto(PRETO);
-}
-
-void Menu(int extra = 2)
-{
-    Escreve(BRANCO, PRETO,              "0-PRETO    (0%)");
-    Escreve(PRETO, MARROM,              "1-MARROM   (1%)");
-    Escreve(PRETO, VERMELHO,            "2-VERMELHO (2%)");
+void ShowMenu(int extra = 2) {
+    Write(WHITE, BLACK,       "0 - BLACK      (0%)");
+    Write(BLACK, RED,         "1 - BROWN      (1%)");
+    Write(BLACK, RED,         "2 - RED        (2%)");
     if (extra <= 2) {
-        Escreve(PRETO, VERMELHO_ESCURO, "3-LARANJA      ");
-        Escreve(PRETO, AMARELO,         "4-AMARELO      ");
+        Write(BLACK, YELLOW,  "3 - ORANGE         ");
+        Write(BLACK, YELLOW,  "4 - YELLOW         ");
     }
-    Escreve(PRETO, VERDE,               "5-VERDE  (0.5%)");
-    Escreve(PRETO, AZUL,                "6-AZUL  (0.25%)");
-    Escreve(PRETO, VIOLETA,             "7-VIOLETA(0.1%)");
-    Escreve(PRETO, CINZA,               "8-CINZA (0.05%)");
+    Write(BLACK, GREEN,       "5 - GREEN    (0.5%)");
+    Write(BLACK, BLUE,        "6 - BLUE    (0.25%)");
+    Write(BLACK, MAGENTA,     "7 - MAGENTA  (0.1%)");
+    Write(BLACK, WHITE,       "8 - GREY    (0.05%)");
     if (extra <= 2) {
-        Escreve(PRETO, BRANCO,          "9-BRANCO       ");
+        Write(BLACK, WHITE,   "9 - WHITE          ");
     }
     if (extra >= 2) {
-        Escreve(PRETO, AMARELO,         "10-OURO    (5%)");
-        Escreve(PRETO, CINZA_ESCURO,    "11-PRATA  (10%)");
+        Write(BLACK, YELLOW,  "10 - GOLD      (5%)");
+        Write(BLACK, WHITE,   "11 - SILVER   (10%)");
     }
     if (extra >= 3) {
-        Escreve(BRANCO, PRETO,          "12-SEM COR(20%)");
+        Write(WHITE, BLACK,   "12 - NO COLOR (20%)");
     }
 }
 
-char* Unidade(int uni)
-{
+char GetUoM(int uni) {
     switch(uni) {
-        case 0:
-            return "";
-            break;
         case 1:
-            return "K";
+            return 'K';
             break;
         case 2:
-            return "M";
+            return 'M';
             break;
         default:
+            return 0;
             break;
     }
 }
 
-int ConverteCores(int cor)
-{
-    switch(cor) {
+int ConvertColor(int color) {
+    switch(color) {
         case 0: return 0; break;
         case 1: return 6; break;
         case 2: return 12; break;
@@ -105,62 +121,52 @@ int ConverteCores(int cor)
         case 8: return 7; break;
         case 9: return 15; break;
     }
+
+    return 0;
 }
 
-int main()
-{
+int main() {
     int v;
     double r;
     int mode;
     int uni = 0;
 
-    CorTexto(BRANCO);
+#ifndef _WIN32
+    start_color();
+#endif
 
-    cout << "\x20\x20\xdb\xdb\xdb\xdb\x20\x20\n";
-    cout << "\x20\xdb\x20\x20\x20\x20\xdb\x20\n";
-    cout << "\xdb\x20\x20\x20\x20\x20\x20\xdb\n";
-    cout << "\xdb\x20\x20\x20\x20\x20\x20\xdb\n";
-    cout << "\x20\xdb\x20\x20\x20\x20\xdb\x20\n";
-    cout << "\x20\x20\xdb\x20\x20\xdb\x20\x20\n";
-    cout << "\xdb\xdb\xdb\x20\x20\xdb\xdb\xdb\n\n";
-
-    printf("1-Cores -> Valor\n");
-    printf("2-Valor -> Cores\n");
+    printf("1-Colors -> Value\n");
+    printf("2-Value -> Colors\n");
     scanf("%i", &v);
-    system("CLS");
 
     if (v == 1) {
-        printf("1-Resistor de 4 faixas\n");
-        printf("2-Resistor de 5 faixas\n");
+        printf("1 - 4 colors resistor\n");
+        printf("2 - 5 colors resistor\n");
         scanf("%i", &mode);
-        system("CLS");
 
-        printf("Digite o valor equivalente a cor da primeira faixa do resistor:\n");
-        Menu(1);
+        printf("Choose the first color of the resistor:\n");
+        ShowMenu(1);
         scanf("%i", &v);
 
         r = v*10;
-        system("CLS");
 
-        printf("Digite o valor equivalente a cor da segunda faixa do resistor:\n");
-        Menu(1);
+        printf("Choose the second color of the resistor:\n");
+        ShowMenu(1);
         scanf("%i", &v);
 
         r += v;
-        system("CLS");
 
         if (mode == 2) {
-            printf("Digite o valor equivalente a cor da terceira faixa do resistor:\n");
-            Menu(1);
+            printf("Choose the third color of the resistor:\n");
+            ShowMenu(1);
             scanf("%i", &v);
 
             r *= 10;
             r += v;
-            system("CLS");
         }
 
-        printf("Digite o valor equivalente a cor da faixa de multiplicacao do resistor:\n");
-        Menu(2);
+        printf("Choose the value of the multiplier color of the resistor:\n");
+        ShowMenu(2);
         scanf("%i", &v);
 
         if (v >= 10) {
@@ -169,10 +175,9 @@ int main()
         }
 
         r *= pow(10, v);
-        system("CLS");
 
-        printf("Digite o valor equivalente a cor da faixa de tolerancia do resistor:\n");
-        Menu(3);
+        printf("Choose the value of the tolerance color of the resistor:\n");
+        ShowMenu(3);
         scanf("%i", &v);
 
         float p;
@@ -211,18 +216,17 @@ int main()
             default:
                 break;
         }
-        system("CLS");
 
         while(fmod(r, 1000) == 0) {
             r /= 1000;
             uni++;
         }
 
-        printf("Valor Nominal:%.2lf %sohms\n", r, Unidade(uni));
-        printf("Valor Minimo:%.2lf %sohms\n", r-r*(p/100), Unidade(uni));
-        printf("Valor Maximo:%.2lf %sohms\n", r+r*(p/100), Unidade(uni));
+        printf("Nominal Value:%.2lf %c ohms\n", r, GetUoM(uni));
+        printf("Minimum Value:%.2lf %c ohms\n", r-r*(p/100), GetUoM(uni));
+        printf("Maximum Value:%.2lf %c ohms\n", r+r*(p/100), GetUoM(uni));
     } else if (v == 2) {
-        printf("Digite o valor do resistor em ohms:\n");
+        printf("Choose the resistor value in ohms:\n");
         scanf("%lf", &r);
 
         while(fmod(r, 10) == 0) {
@@ -232,17 +236,17 @@ int main()
 
         if (r >= 100) {
             cout << 5 << endl;
-            Escreve(PRETO, (Cores)ConverteCores((int)((r - fmod(r, 100)) / 100)), "           ");
-            Escreve(PRETO, (Cores)ConverteCores((int)((fmod(r, 100) - fmod(r, 10)) / 10)), "           ");
-            Escreve(PRETO, (Cores)ConverteCores(fmod(r, 10)), "           ");
-            Escreve(PRETO, (Cores)ConverteCores(uni), "           ");
+            Write(BLACK, (Color)ConvertColor((int)((r - fmod(r, 100)) / 100)),          "           ");
+            Write(BLACK, (Color)ConvertColor((int)((fmod(r, 100) - fmod(r, 10)) / 10)), "           ");
+            Write(BLACK, (Color)ConvertColor(fmod(r, 10)),                              "           ");
+            Write(BLACK, (Color)ConvertColor(uni),                                      "           ");
         } else {
-            Escreve(PRETO, (Cores)ConverteCores(((r - fmod(r, 10)) / 10)), "           ");
-            Escreve(PRETO, (Cores)ConverteCores(fmod(r, 10)), "           ");
-            Escreve(PRETO, (Cores)ConverteCores(uni), "           ");
+            Write(BLACK, (Color)ConvertColor(((r - fmod(r, 10)) / 10)),                 "           ");
+            Write(BLACK, (Color)ConvertColor(fmod(r, 10)),                              "           ");
+            Write(BLACK, (Color)ConvertColor(uni),                                      "           ");
         }
     }
 
-    system("PAUSE");
+    getch();
     return 0;
 }
